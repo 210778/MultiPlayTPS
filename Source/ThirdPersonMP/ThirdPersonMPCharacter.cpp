@@ -11,11 +11,18 @@
 
 //マルチプレイの実装
 //https://docs.unrealengine.com/5.1/ja/multiplayer-programming-quick-start-for-unreal-engine/
-/*これらは、変数のレプリケーションに必要な機能と、
+/*
+これらは、変数のレプリケーションに必要な機能と、
 GEngine の AddOnscreenDebugMessage 関数へのアクセスを提供します。
-これを使用して、画面にメッセージを出力します。*/
+これを使用して、画面にメッセージを出力します。
+*/
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
+
+/*
+発射物のタイプを認識して発射物をスポーンできるようになります。
+*/
+#include "ThirdPersonMPProjectile.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AThirdPersonMPCharacter
@@ -57,6 +64,15 @@ AThirdPersonMPCharacter::AThirdPersonMPCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
+
+	/*
+	これらにより、発射物の発射を処理するために必要な変数が初期化されます。
+	*/
+	//Initialize projectile class
+	ProjectileClass = AThirdPersonMPProjectile::StaticClass();
+	//Initialize fire rate
+	FireRate = 0.25f;
+	bIsFiringWeapon = false;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -108,6 +124,13 @@ void AThirdPersonMPCharacter::SetupPlayerInputComponent(class UInputComponent* P
 
 	// VR headset functionality
 	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AThirdPersonMPCharacter::OnResetVR);
+
+	/*
+	StartFire がこのセクションの最初の手順で作成した Fire 入力アクションにバインドされ、
+	ユーザーが StartFire を有効にできます。
+	*/
+	// Handle firing projectiles
+	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AThirdPersonMPCharacter::StartFire);
 }
 
 
@@ -257,4 +280,47 @@ float AThirdPersonMPCharacter::TakeDamage(float DamageTaken, struct FDamageEvent
 	float damageApplied = CurrentHealth - DamageTaken;
 	SetCurrentHealth(damageApplied);
 	return damageApplied;
+}
+
+/*
+StartFire はプレイヤーが、発射プロセスを開始するためにローカル マシンで呼び出す関数です。
+この関数は、次の条件に基づいてユーザーが HandleFire を呼び出すことができる頻度を制限します。
+
+	1.すでに発射中の場合、ユーザーは発射物を発射できない。
+		これは、StartFire の呼び出し時に bFiringWeapon が true に設定されていることで指定されます。
+	2.StopFire の呼び出し時には、bFiringWeapon は false にのみ設定される。
+	3.長さが FireRate であるタイマーが完了すると StopFire が呼び出される。
+
+つまり、ユーザーが発射物を発射する際は、再度発射できるまでに FireRate 秒以上待機する必要があります。
+これは、StartFire のバインド先の入力の種類にかかわらず同じように機能します。
+例えば、ユーザーが「Fire」コマンドをスクロール ホイールやその他の不適切な入力にバインドしたり、
+ユーザーが繰り返しボタンを押したりしても、この関数は許容可能な間隔で引き続き実行され、
+HandleFire への呼び出しによる信頼性の高い関数のユーザーのキューはオーバーフローしません。
+
+HandleFire は Server RPC であるため、CPP での実装には、
+関数名に「_Implementation」サフィックスを付ける必要があります。
+この実装では、キャラクターの回転コントロールを使用してカメラが向いている方向を取得してから
+発射物をスポーンすることで、プレイヤーが照準を合わせることができるようにしています。
+そのため、発射物の Projectile Movement コンポーネントがその方向での発射物の動きを処理をします。
+*/
+void AThirdPersonMPCharacter::StartFire()
+{
+	if (!bIsFiringWeapon)
+	{
+		bIsFiringWeapon = true;
+		UWorld* World = GetWorld();
+		World->GetTimerManager().SetTimer(FiringTimer, this, &AThirdPersonMPCharacter::StopFire, FireRate, false);
+		HandleFire();
+	}
+}
+
+void AThirdPersonMPCharacter::StopFire()
+{
+	bIsFiringWeapon = false;
+}
+
+void AThirdPersonMPCharacter::HandleFire_Implementation()
+{
+	FVector spawnLocation = GetActorLocation() + (GetControlRotation().Vector() * 100.0f) + (GetActorUpVector() * 50.0f);
+	FRotator spawnRotation = GetControlRotation();
 }

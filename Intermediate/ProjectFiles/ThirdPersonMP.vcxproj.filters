@@ -3,7 +3,7 @@
   <ItemGroup>
     <None Include="..\..\ThirdPersonMP.uproject" />
     <Filter Include="Source">
-      <UniqueIdentifier>{FDC7C5F1-508A-4B03-94C3-0EC2DE9E97D4}</UniqueIdentifier>
+      <UniqueIdentifier>{5DFD3132-888A-4056-B90E-F39D80043C09}</UniqueIdentifier>
     </Filter>
     <None Include="..\..\Source\ThirdPersonMP.Target.cs">
       <Filter>Source</Filter>
@@ -11,8 +11,10 @@
     <None Include="..\..\Source\ThirdPersonMPEditor.Target.cs">
       <Filter>Source</Filter>
     </None>
+    <None Include="..\..\.gitattributes" />
+    <None Include="..\..\.gitignore" />
     <Filter Include="Config">
-      <UniqueIdentifier>{4F17A767-48DB-47F3-8826-7788748001BF}</UniqueIdentifier>
+      <UniqueIdentifier>{4EA8C3EE-5769-4888-827E-C386B9CAEC3F}</UniqueIdentifier>
     </Filter>
     <None Include="..\..\Config\DefaultEditor.ini">
       <Filter>Config</Filter>
@@ -30,7 +32,7 @@
       <Filter>Config</Filter>
     </None>
     <Filter Include="Source\ThirdPersonMP">
-      <UniqueIdentifier>{573F780E-1EEF-475C-A3B2-1FF0E6896C3E}</UniqueIdentifier>
+      <UniqueIdentifier>{0197E1E1-ED88-4E8D-9469-A185157C9D8E}</UniqueIdentifier>
     </Filter>
     <None Include="..\..\Source\ThirdPersonMP\ThirdPersonMP.Build.cs">
       <Filter>Source\ThirdPersonMP</Filter>
@@ -51,6 +53,12 @@
       <Filter>Source\ThirdPersonMP</Filter>
     </ClCompile>
     <ClInclude Include="..\..\Source\ThirdPersonMP\ThirdPersonMPGameMode.h">
+      <Filter>Source\ThirdPersonMP</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\Source\ThirdPersonMP\ThirdPersonMPProjectile.cpp">
+      <Filter>Source\ThirdPersonMP</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\ThirdPersonMP\ThirdPersonMPProjectile.h">
       <Filter>Source\ThirdPersonMP</Filter>
     </ClInclude>
   </ItemGroup>

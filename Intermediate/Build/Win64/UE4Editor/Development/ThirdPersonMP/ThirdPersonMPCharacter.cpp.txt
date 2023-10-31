@@ -40,3 +40,6 @@ C:\Program Files\Epic Games\UE_4.27\Engine\Intermediate\Build\Win64\UE4Editor\In
 C:\Program Files\Epic Games\UE_4.27\Engine\Intermediate\Build\Win64\UE4Editor\Inc\Engine\CharacterMovementComponent.generated.h
 C:\Program Files\Epic Games\UE_4.27\Engine\Source\Runtime\Engine\Classes\GameFramework/SpringArmComponent.h
 C:\Program Files\Epic Games\UE_4.27\Engine\Intermediate\Build\Win64\UE4Editor\Inc\Engine\SpringArmComponent.generated.h
+C:\Program Files\Epic Games\UE_4.27\Engine\Source\Runtime\Engine\Public\Net/UnrealNetwork.h
+E:\210778\04UnrealEngine\ThirdPersonMP\Source\ThirdPersonMP\ThirdPersonMPProjectile.h
+E:\210778\04UnrealEngine\ThirdPersonMP\Intermediate\Build\Win64\UE4Editor\Inc\ThirdPersonMP\ThirdPersonMPProjectile.generated.h

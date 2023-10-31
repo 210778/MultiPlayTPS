@@ -106,6 +106,43 @@ protected:
 	UFUNCTION()
 		void OnRep_CurrentHealth();
 
+	/*
+	これらは、発射物を発射するために使用する変数と関数です。
+	HandleFire はこのチュートリアルで実装する唯一の RPC であり、サーバーでの発射物のスポーンを行います。
+	HandleFire には Server 指定子が含まれているため、クライアント上で HandleFire を呼び出そうとすると、
+	呼び出しがネットワーク経由でサーバー上の権限のあるキャラクターに向けられます。
+
+	HandleFire には Reliable 指定子も含まれているため、HandleFire は呼び出されるたびに
+	信頼できる RPC のキューに配置されます。また、サーバーが HandleFire を正常に受信するとキューから削除されます。
+	これにより、サーバーがこの関数呼び出しを確実に受信することが保証されます。
+	ただし、削除することなく一度に多くの RPC を配置すると、信頼性の高い RPC のキューが
+	オーバーフローする恐れがあります。その場合、ユーザーは強制的に接続を解除されます。
+	そのため、プレイヤーがこの関数を呼び出すことのできる頻度に注意する必要があります。
+	*/
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay|Projectile")
+		TSubclassOf<class AThirdPersonMPProjectile> ProjectileClass;
+
+	/** Delay between shots in seconds.Used to control fire rate for our test projectile, but also to prevent an overflow of server functions from binding SpawnProjectile directly to input.*/
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay")
+		float FireRate;
+
+	/** If true, we are in the process of firing projectiles. */
+	bool bIsFiringWeapon;
+
+	/** Function for beginning weapon fire.*/
+	UFUNCTION(BlueprintCallable, Category = "Gameplay")
+		void StartFire();
+
+	/** Function for ending weapon fire.Once this is called, the player can use StartFire again.*/
+	UFUNCTION(BlueprintCallable, Category = "Gameplay")
+		void StopFire();
+
+	/** Server function for spawning projectiles.*/
+	UFUNCTION(Server, Reliable)
+		void HandleFire();
+
+	/** A timer handle used for providing the fire rate delay in-between spawns.*/
+	FTimerHandle FiringTimer;
 
 
 	/** Resets HMD orientation in VR. */
