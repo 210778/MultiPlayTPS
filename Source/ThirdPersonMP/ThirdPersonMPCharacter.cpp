@@ -9,11 +9,23 @@
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
 
+//マルチプレイの実装
+//https://docs.unrealengine.com/5.1/ja/multiplayer-programming-quick-start-for-unreal-engine/
+/*これらは、変数のレプリケーションに必要な機能と、
+GEngine の AddOnscreenDebugMessage 関数へのアクセスを提供します。
+これを使用して、画面にメッセージを出力します。*/
+#include "Net/UnrealNetwork.h"
+#include "Engine/Engine.h"
+
 //////////////////////////////////////////////////////////////////////////
 // AThirdPersonMPCharacter
 
 AThirdPersonMPCharacter::AThirdPersonMPCharacter()
 {
+	//Initialize the player's Health
+	MaxHealth = 100.0f;
+	CurrentHealth = MaxHealth;
+
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
@@ -45,6 +57,28 @@ AThirdPersonMPCharacter::AThirdPersonMPCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Replicated Properties
+
+void AThirdPersonMPCharacter::GetLifetimeReplicatedProps(TArray <FLifetimeProperty>& OutLifetimeProps) const
+{
+	/* GetLifetimeReplicatedProps 関数は、Replicated 指定子で指定したすべてのプロパティをレプリケートします。
+	また、この関数を使用すると、プロパティのレプリケート方法を設定できます。
+	この例では、CurrentHealth の最も基本的な実装を使用しています。
+	レプリケートする必要のあるプロパティを追加する場合は常に、
+	そのプロパティをこの関数にも追加する必要があります。
+	
+	*WARNING*
+	GetLifetimeReplicatedProps の Super バージョンを呼び出す必要があります。
+	これを行わないと、アクタの親クラスから継承されたプロパティが、
+	親クラスでこれらのプロパティをレプリケートするように指定されている場合でもレプリケートされません。*/
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+
+	//Replicate current health.
+	DOREPLIFETIME(AThirdPersonMPCharacter, CurrentHealth);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -137,4 +171,90 @@ void AThirdPersonMPCharacter::MoveRight(float Value)
 		// add movement in that direction
 		AddMovementInput(Direction, Value);
 	}
+}
+
+/*
+この関数を使用して、プレイヤーの CurrentHealth への変更に応じて更新を実行します。
+現在、この機能は画面上のデバッグ メッセージに制限されていますが、追加の機能は追加することができます。
+たとえば、OnDeath 関数は、死亡アニメーションをトリガーするために、すべてのマシンで呼び出されます。
+なお、OnHealthUpdate はレプリケートされないため、すべてのデバイスで手動で呼び出す必要があります。
+*/
+void AThirdPersonMPCharacter::OnHealthUpdate()
+{
+	//Client-specific functionality
+	if (IsLocallyControlled())
+	{
+		FString healthMessage = FString::Printf(TEXT("You now have %f health remaining."), CurrentHealth);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
+
+		if (CurrentHealth <= 0)
+		{
+			FString deathMessage = FString::Printf(TEXT("You have been killed."));
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, deathMessage);
+		}
+	}
+
+	//Server-specific functionality
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		FString healthMessage = FString::Printf(TEXT("%s now has %f health remaining."), *GetFName().ToString(), CurrentHealth);
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
+	}
+
+	//Functions that occur on all machines. 
+	/*
+		Any special functionality that should occur as a result of damage or death should be placed here.
+	*/
+}
+
+/*
+変数は常時レプリケートされるのではなく、値が変更するたびにレプリケートされます。
+また、RepNotifies はクライアントが変数のレプリケートされた値を正常に受け取るたびに実行されます。
+そのため、サーバー上のプレイヤーの CurrentHealth を変更するときはいつでも、
+接続された各クライアントで OnRep_CurrentHealth を実行することが期待されます。
+このため、OnRep_CurrentHealth がクライアントのマシンで OnHealthUpdate を呼び出すのに最適です。
+*/
+void AThirdPersonMPCharacter::OnRep_CurrentHealth()
+{
+	OnHealthUpdate();
+}
+
+/*
+SetCurrentHealth は、AThirdPersonMPCharacter の外部から
+プレイヤーの CurrentHealth を変更する制御された手段を提供します。
+これはレプリケートされた関数ではないものの、アクタのネットワーク ロールが ROLE_Authority であることを
+確認することで、ホストされたゲーム サーバーで呼び出された場合にのみ実行されるようにこの関数を制限します。
+これは、CurrentHealth を 0 とプレイヤーの MaxHealth 間の値に固定することで、
+CurrentHealth を無効な値に設定できないようにします。
+また、サーバーとクライアントの両方がこの関数を同時に呼び出すことを保証するために OnHealthUpdate を呼び出します。
+サーバーは RepNotify を受け取らないため、これが必要になります。
+
+*TIP*
+このような「セッター」関数はすべての変数に必要なわけではありませんが、
+特に多くの異なるソースから変更される可能性がある場合に、
+プレイ中に頻繁に変更される反応性の高いゲームプレイ変数に適しています。
+これは、このような変数のライブでの変更の一貫性を高め、デバッグを容易にし、
+新しい機能による拡張をより簡単にするため、
+シングルプレイヤー ゲームおよびマルチプレイヤー ゲームで使用することをお勧めします。
+*/
+void AThirdPersonMPCharacter::SetCurrentHealth(float healthValue)
+{
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		CurrentHealth = FMath::Clamp(healthValue, 0.f, MaxHealth);
+		OnHealthUpdate();
+	}
+}
+
+/*
+アクタにダメージを適用するためのビルトイン関数で、
+そのアクタの基本の TakeDamage 関数を呼び出します。
+この場合、SetCurrentHealth を使用してシンプルなヘルスの削減を実装します。
+*/
+float AThirdPersonMPCharacter::TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEvent
+	, AController* EventInstigator, AActor* DamageCauser)
+{
+	float damageApplied = CurrentHealth - DamageTaken;
+	SetCurrentHealth(damageApplied);
+	return damageApplied;
 }

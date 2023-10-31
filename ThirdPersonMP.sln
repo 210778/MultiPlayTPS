@@ -66,6 +66,9 @@ Global
 		{A55371CC-D665-4E28-B2C0-BD01C949D4BF} = {94A6C6F3-99B3-346E-9557-ABF9D4064DBD}
 		{2649179B-8B67-48E9-B6F1-2D0A94F05FDB} = {8E2F6A87-1826-34F4-940C-CC23A48F9FE4}
 	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8EB8564B-0CBC-47D3-86B4-4BC8A64F2EE8}
+	EndGlobalSection
 	GlobalSection(44630d46-96b5-488c-8df926e21db8c1a3) = preSolution
 		ueSolution = true
 	EndGlobalSection
