@@ -1,0 +1,8 @@
+{
+	"SourceFiles": [
+		"E:\\210778\\04UnrealEngine\\ThirdPersonMP\\Source\\ThirdPersonMP\\ThirdPersonMP.Build.cs",
+		"E:\\210778\\04UnrealEngine\\ThirdPersonMP\\Source\\ThirdPersonMP.Target.cs",
+		"E:\\210778\\04UnrealEngine\\ThirdPersonMP\\Source\\ThirdPersonMPEditor.Target.cs"
+	],
+	"EngineVersion": "4.27.2"
+}
