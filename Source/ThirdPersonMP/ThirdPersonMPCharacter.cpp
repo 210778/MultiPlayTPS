@@ -18,7 +18,6 @@ GEngine の AddOnscreenDebugMessage 関数へのアクセスを提供します。
 */
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
-
 /*
 発射物のタイプを認識して発射物をスポーンできるようになります。
 */
@@ -305,6 +304,8 @@ HandleFire は Server RPC であるため、CPP での実装には、
 */
 void AThirdPersonMPCharacter::StartFire()
 {
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Fire"));
+
 	if (!bIsFiringWeapon)
 	{
 		bIsFiringWeapon = true;
@@ -323,4 +324,10 @@ void AThirdPersonMPCharacter::HandleFire_Implementation()
 {
 	FVector spawnLocation = GetActorLocation() + (GetControlRotation().Vector() * 100.0f) + (GetActorUpVector() * 50.0f);
 	FRotator spawnRotation = GetControlRotation();
+
+	FActorSpawnParameters spawnParameters;
+	spawnParameters.Instigator = GetInstigator();
+	spawnParameters.Owner = this;
+
+	AThirdPersonMPProjectile* spawnedProjectile = GetWorld()->SpawnActor<AThirdPersonMPProjectile>(spawnLocation, spawnRotation, spawnParameters);
 }

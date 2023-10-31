@@ -19,8 +19,21 @@ class AThirdPersonMPCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
 
-
 public:
+
+	AThirdPersonMPCharacter();
+
+	/** Property replication */
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
+	float BaseTurnRate;
+
+	/** Base look up/down rate, in deg/sec. Other scaling may affect final rate. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
+	float BaseLookUpRate;
+
 
 	/*
 	GetMaxHealth 関数および GetCurrentHealth 関数は、C++ およびブループリントの両方で、
@@ -48,23 +61,7 @@ public:
 		float TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEvent, 
 						 AController* EventInstigator, AActor* DamageCauser) override;
 
-
-	AThirdPersonMPCharacter();
-
-	/** Property replication */
-	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
-	float BaseTurnRate;
-
-	/** Base look up/down rate, in deg/sec. Other scaling may affect final rate. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
-	float BaseLookUpRate;
-
-
 protected:
-
 
 	/*
 	プレイヤーのヘルスの変更方法を厳密に制御する必要があるため、これらのヘルス値には次の制約があります。
